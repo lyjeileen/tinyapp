@@ -16,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/lyjeileen/tinyapp/issues"
   },
-  "homepage": "https://github.com/lyjeileen/tinyapp#readme"
+  "homepage": "https://github.com/lyjeileen/tinyapp#readme",
+  "dependencies": {
+    "express": "^4.18.1"
+  }
 }
