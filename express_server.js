@@ -38,6 +38,13 @@ app.post("/urls", (req, res) => {
   res.redirect(`/urls/${shortURL}`);
 });
 
+app.post("/urls/:id/update", (req, res) => {
+  const id = req.params.id;
+  urlDatabase[id] = req.body.newURL;
+  console.log(req.body.newURL);
+  res.redirect(`/urls/${id}`);
+});
+
 app.post("/urls/:id/delete", (req, res) => {
   const id = req.params.id;
   delete urlDatabase[id];
