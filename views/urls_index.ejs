@@ -20,22 +20,29 @@
     <%- include('partials/_header') %>
     <main style="margin: 1em;">
       <h3>My URLs</h3>
+      <form method="POST" action="/urls/9sm5xK/delete">
       <table class="table">
         <thead>
           <tr>
             <th scope="col">Short URL ID</th>
             <th scope="col">Long URL</th>
+            <th scope="col">Delete</th>
           </tr>
         </thead>
         <tbody>
+          
           <% for (let id in urls) { %>
+            <form method="POST" action="/urls/<%= id %>/delete"></form>
             <tr>
               <td><a href=http://localhost:8080/u/<%= id %>><%= id %></td>
               <td><%= urls[id] %></td>
+              <td><button type="submit" class="btn btn-primary">delete</button></td>
             </tr>
+          </form>
           <% } %>
         </tbody>
       </table>
+    
       <a href="#">Click here to shorten a new URL</a>
     </main>
     <!-- Bootstrap JS -->
