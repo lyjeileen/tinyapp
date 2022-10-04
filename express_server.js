@@ -7,7 +7,7 @@ app.use(morgan("dev"));
 app.use(express.urlencoded({ extended: true }));
 app.set("view engine", "ejs");
 
-let shortURL = function generateRandomString() {
+let toShortURL = function generateRandomString() {
   const alphanumericals =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
   let result = "";
@@ -32,13 +32,15 @@ app.get("/urls", (req, res) => {
   res.render("urls_index", templateVars);
 });
 
-app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
+app.post("/urls", (req, res) => {
+  console.log(req.body);
+  let shortURL = toShortURL();
+  urlDatabase[shortURL] = req.body.longURL;
+  res.redirect(`/urls/${shortURL}`);
 });
 
-app.post("/urls", (req, res) => {
-  console.log(req.body); // Log the POST request body to the console
-  res.send(shortURL()); // Respond with 'Ok' (we will replace this)
+app.get("/urls/new", (req, res) => {
+  res.render("urls_new");
 });
 
 app.get("/urls/:id", (req, res) => {
@@ -47,6 +49,11 @@ app.get("/urls/:id", (req, res) => {
     longURL: urlDatabase[req.params.id],
   };
   res.render("urls_show", templateVars);
+});
+
+app.get("/u/:id", (req, res) => {
+  const longURL = urlDatabase[req.params.id];
+  res.redirect(longURL);
 });
 
 app.get("/urls.json", (req, res) => {
