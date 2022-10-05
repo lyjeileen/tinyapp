@@ -56,7 +56,13 @@ app.get("/urls", (req, res) => {
     user: users[req.cookies.user_id],
     urls: urlDatabase,
   };
+  console.log(req.cookies.email);
   res.render("urls_index", templateVars);
+});
+
+app.get("/login", (req, res) => {
+  const templateVars = { user: users[req.cookies.user_id] };
+  res.render("login", templateVars);
 });
 
 app.get("/register", (req, res) => {
@@ -68,11 +74,14 @@ app.post("/register", (req, res) => {
   const id = toShortURL();
   const { email, password } = req.body;
   let validRegister = true;
-  if (!email || !password || getUserByEmail(email)) {
-    res.status(400).send("Bad Request");
+  if (!email || !password) {
+    res.status(400).send("Please enter a valid email and password.");
     validRegister = false;
   }
-
+  if (getUserByEmail(email)) {
+    res.status(400).send("Please enter a new email address.");
+    validRegister = false;
+  }
   if (validRegister) {
     users[id] = { id, email, password };
     res.cookie("user_id", id);
