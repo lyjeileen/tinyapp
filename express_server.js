@@ -39,6 +39,15 @@ app.get("/urls", (req, res) => {
   res.render("urls_index", templateVars);
 });
 
+app.get("/register", (req, res) => {
+  const templateVars = {
+    username: req.cookies["username"]
+      ? req.cookies["username"].username
+      : false,
+  };
+  res.render("register", templateVars);
+});
+
 app.post("/urls", (req, res) => {
   let shortURL = toShortURL();
   urlDatabase[shortURL] = req.body.longURL;
