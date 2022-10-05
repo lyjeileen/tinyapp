@@ -2,7 +2,7 @@ const express = require("express");
 const app = express();
 const morgan = require("morgan");
 const cookieParser = require("cookie-parser");
-const PORT = 8080; // default port 8080
+const PORT = 8080;
 
 app.use(morgan("dev"));
 app.use(express.urlencoded({ extended: true }));
@@ -44,20 +44,14 @@ app.get("/", (req, res) => {
 
 app.get("/urls", (req, res) => {
   const templateVars = {
+    user: users[req.cookies.user_id],
     urls: urlDatabase,
-    username: req.cookies["username"]
-      ? req.cookies["username"].username
-      : false,
   };
   res.render("urls_index", templateVars);
 });
 
 app.get("/register", (req, res) => {
-  const templateVars = {
-    username: req.cookies["username"]
-      ? req.cookies["username"].username
-      : false,
-  };
+  const templateVars = { user: users[req.cookies.user_id] };
   res.render("register", templateVars);
 });
 
@@ -66,7 +60,6 @@ app.post("/register", (req, res) => {
   const { email, password } = req.body;
   users[id] = { id, email, password };
   res.cookie("user_id", id);
-  console.log(users);
   res.redirect("/urls");
 });
 
@@ -100,9 +93,7 @@ app.post("/logout", (req, res) => {
 
 app.get("/urls/new", (req, res) => {
   const templateVars = {
-    username: req.cookies["username"]
-      ? req.cookies["username"].username
-      : false,
+    user: users[req.cookies.user_id],
   };
   res.render("urls_new", templateVars);
 });
@@ -111,9 +102,7 @@ app.get("/urls/:id", (req, res) => {
   const templateVars = {
     id: req.params.id,
     longURL: urlDatabase[req.params.id],
-    username: req.cookies["username"]
-      ? req.cookies["username"].username
-      : false,
+    user: users[req.cookies.user_id],
   };
   res.render("urls_show", templateVars);
 });
