@@ -9,7 +9,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.set("view engine", "ejs");
 
-let toShortURL = function generateRandomString() {
+const toShortURL = function generateRandomString() {
   const alphanumericals =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
   let result = "";
@@ -18,6 +18,15 @@ let toShortURL = function generateRandomString() {
       alphanumericals[Math.floor(Math.random() * alphanumericals.length)];
   }
   return result;
+};
+
+const getUserByEmail = function (email) {
+  for (let user in users) {
+    if (users[user].email === email) {
+      return user;
+    }
+  }
+  return null;
 };
 
 const urlDatabase = {
@@ -58,9 +67,17 @@ app.get("/register", (req, res) => {
 app.post("/register", (req, res) => {
   const id = toShortURL();
   const { email, password } = req.body;
-  users[id] = { id, email, password };
-  res.cookie("user_id", id);
-  res.redirect("/urls");
+  let validRegister = true;
+  if (!email || !password || getUserByEmail(email)) {
+    res.status(400).send("Bad Request");
+    validRegister = false;
+  }
+
+  if (validRegister) {
+    users[id] = { id, email, password };
+    res.cookie("user_id", id);
+    res.redirect("/urls");
+  }
 });
 
 app.post("/urls", (req, res) => {
@@ -70,7 +87,7 @@ app.post("/urls", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
-  res.cookie("username", req.body);
+  res.cookie("user_id", req.body);
   res.redirect("/urls");
 });
 
@@ -87,7 +104,7 @@ app.post("/urls/:id/delete", (req, res) => {
 });
 
 app.post("/logout", (req, res) => {
-  res.clearCookie("username");
+  res.clearCookie("user_id");
   res.redirect("/urls");
 });
 
