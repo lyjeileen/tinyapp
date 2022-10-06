@@ -2,6 +2,7 @@ const express = require("express");
 const app = express();
 const morgan = require("morgan");
 const cookieParser = require("cookie-parser");
+const bcrypt = require("bcryptjs");
 const PORT = 8080;
 
 app.use(morgan("dev"));
@@ -52,14 +53,16 @@ const urlDatabase = {
 
 const users = {
   userRandomID: {
-    id: "userRandomID",
+    id: "x8ndHs",
     email: "user@example.com",
-    password: "purple-monkey-dinosaur",
+    password: "$2a$10$CozJx3mThm0f50PneDetLOcQKt2suTusEWBA0hGZIB3/607Oub/wy",
   },
+  //password:123
   user2RandomID: {
-    id: "user2RandomID",
-    email: "user2@example.com",
-    password: "dishwasher-funk",
+    id: "aJ48lW",
+    email: "lyjeileen@gmail.com",
+    password: "$2a$10$MOMgyC4R6NAJVqE6vF3Os.6q12dGuN6A4ANYlU/3qn.0OSwiUXuZe",
+    //password:1234
   },
 };
 
@@ -98,20 +101,18 @@ app.get("/register", (req, res) => {
 app.post("/register", (req, res) => {
   const id = toShortURL();
   const { email, password } = req.body;
-  let validRegister = true;
+
   if (!email || !password) {
-    res.status(400).send("Please enter a valid email and password.");
-    validRegister = false;
+    return res.status(400).send("Please enter a valid email and password.");
   }
   if (getUserByEmail(email)) {
-    res.status(400).send("Please enter a new email address.");
-    validRegister = false;
+    return res.status(400).send("Please enter a new email address.");
   }
-  if (validRegister) {
-    users[id] = { id, email, password };
-    res.cookie("user_id", id);
-    res.redirect("/urls");
-  }
+  const hashedPassword = bcrypt.hashSync(password, 10);
+  users[id] = { id, email, password: hashedPassword };
+
+  res.cookie("user_id", id);
+  res.redirect("/urls");
 });
 
 app.post("/urls", (req, res) => {
@@ -133,7 +134,7 @@ app.post("/login", (req, res) => {
   if (!getUserByEmail(req.body.email)) {
     return res.status(403).send("Please enter a valid email address");
   }
-  if (req.body.password !== user.password) {
+  if (!bcrypt.compareSync(req.body.password, user.password)) {
     return res.status(403).send("Incorrect password.");
   }
 
