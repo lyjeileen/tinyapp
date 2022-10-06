@@ -20,7 +20,6 @@
     <%- include('partials/_header') %>
     <main style="margin: 1em;">
       <h3>My URLs</h3>
-      <form method="POST" action="/urls/9sm5xK/delete">
       <table class="table">
         <thead>
           <tr>
@@ -38,7 +37,7 @@
               <td><a href=http://localhost:8080/u/<%= id %>><%= id %></td>
               <td><%= urls[id] %></td>
               <td><form method="POST" action="/urls/<%= id %>/update"><button type="submit" class="btn btn-primary">Edit</button></form></td>
-              <td><form method="POST" action="/urls/<%= id %>/delete"><button type="submit" class="btn btn-primary">delete</button></form></td>
+              <td><form method="POST" action="/urls/<%= id %>/delete"><button type="submit" class="btn btn-primary">Delete</button></form></td>
             </tr>
           
           <% } %>
