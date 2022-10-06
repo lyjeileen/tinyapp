@@ -4,6 +4,7 @@ const morgan = require("morgan");
 const cookieSession = require("cookie-session");
 const bcrypt = require("bcryptjs");
 const PORT = 8080;
+const getUserByEmail = require("./helpers");
 
 app.use(morgan("dev"));
 app.use(express.urlencoded({ extended: true }));
@@ -25,15 +26,6 @@ const toShortURL = function generateRandomString() {
       alphanumericals[Math.floor(Math.random() * alphanumericals.length)];
   }
   return result;
-};
-
-const getUserByEmail = function (email, users) {
-  for (let user in users) {
-    if (users[user].email === email) {
-      return user;
-    }
-  }
-  return null;
 };
 
 const urlsForUser = function (id) {
