@@ -143,7 +143,6 @@ app.post("/login", (req, res) => {
 
 app.post("/urls/:id", (req, res) => {
   const id = req.params.id;
-  console.log(req.cookies);
   if (!urlDatabase[id]) {
     return res.send("Id does not exist.");
   }
@@ -161,6 +160,16 @@ app.post("/urls/:id", (req, res) => {
 
 app.post("/urls/:id/delete", (req, res) => {
   const id = req.params.id;
+  if (!urlDatabase[id]) {
+    return res.send("Id does not exist.");
+  }
+  if (!req.cookies.user_id) {
+    return res.send("This page is only accessible to logged-in user.");
+  }
+  const validURLs = urlsForUser(req.cookies.user_id);
+  if (!validURLs[id]) {
+    return res.send("Sorry, this URL does not belong to your account.");
+  }
   delete urlDatabase[id];
   res.redirect("/urls");
 });
