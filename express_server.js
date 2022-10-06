@@ -27,7 +27,7 @@ const toShortURL = function generateRandomString() {
   return result;
 };
 
-const getUserByEmail = function (email) {
+const getUserByEmail = function (email, users) {
   for (let user in users) {
     if (users[user].email === email) {
       return user;
@@ -62,8 +62,9 @@ const users = {
     id: "x8ndHs",
     email: "user@example.com",
     password: "$2a$10$CozJx3mThm0f50PneDetLOcQKt2suTusEWBA0hGZIB3/607Oub/wy",
+    //password:123
   },
-  //password:123
+
   aJ48lW: {
     id: "aJ48lW",
     email: "lyjeileen@gmail.com",
@@ -80,7 +81,6 @@ app.get("/urls", (req, res) => {
   if (!req.session.user_id) {
     return res.status(401).send("You are not logged in.");
   }
-
   const templateVars = {
     user: users[req.session.user_id],
     urls: urlsForUser(req.session.user_id),
@@ -92,7 +92,7 @@ app.get("/login", (req, res) => {
   if (req.session.user_id) {
     return res.redirect("urls");
   }
-  const templateVars = { user: users[req.session.user_id] };
+  const templateVars = { user: undefined };
   res.render("login", templateVars);
 });
 
@@ -111,7 +111,7 @@ app.post("/register", (req, res) => {
   if (!email || !password) {
     return res.status(400).send("Please enter a valid email and password.");
   }
-  if (getUserByEmail(email)) {
+  if (getUserByEmail(email, users)) {
     return res.status(400).send("Please enter a new email address.");
   }
   const hashedPassword = bcrypt.hashSync(password, 10);
@@ -136,10 +136,10 @@ app.post("/urls", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
-  const user = users[getUserByEmail(req.body.email)];
-  if (!getUserByEmail(req.body.email)) {
+  if (!getUserByEmail(req.body.email, users)) {
     return res.status(403).send("Please enter a valid email address");
   }
+  const user = users[getUserByEmail(req.body.email, users)];
   if (!bcrypt.compareSync(req.body.password, user.password)) {
     return res.status(403).send("Incorrect password.");
   }
