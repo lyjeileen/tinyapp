@@ -29,6 +29,16 @@ const getUserByEmail = function (email) {
   return null;
 };
 
+const urlsForUser = function (id) {
+  let validURLs = {};
+  for (url in urlDatabase) {
+    if (urlDatabase[url].userID === id) {
+      validURLs[url] = urlDatabase[url].longURL;
+    }
+  }
+  return validURLs;
+};
+
 const urlDatabase = {
   b6UTxQ: {
     longURL: "https://www.tsn.ca",
@@ -58,9 +68,13 @@ app.get("/", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
+  if (!req.cookies.user_id) {
+    return res.status(401).send("You are not logged in.");
+  }
+
   const templateVars = {
     user: users[req.cookies.user_id],
-    urls: urlDatabase,
+    urls: urlsForUser(req.cookies.user_id),
   };
   res.render("urls_index", templateVars);
 });
@@ -155,9 +169,16 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.get("/urls/:id", (req, res) => {
+  if (!req.cookies.user_id) {
+    return res.send("This page is only accessible to logged-in user.");
+  }
+  const validURLs = urlsForUser(req.cookies.user_id);
+  if (!validURLs[req.params.id]) {
+    return res.send("This URL does not belong to your account.");
+  }
   const templateVars = {
     id: req.params.id,
-    longURL: urlDatabase[req.params.id].longURL,
+    longURL: validURLs[req.params.id],
     user: users[req.cookies.user_id],
   };
   res.render("urls_show", templateVars);
