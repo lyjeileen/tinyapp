@@ -87,6 +87,7 @@ app.post("/register", (req, res) => {
     res.cookie("user_id", id);
     res.redirect("/urls");
   }
+  console.log(users);
 });
 
 app.post("/urls", (req, res) => {
