@@ -96,6 +96,11 @@ app.post("/register", (req, res) => {
 });
 
 app.post("/urls", (req, res) => {
+  if (!req.cookies.user_id) {
+    return res.send(
+      "Only registered users can shorten URLs. Please log in first."
+    );
+  }
   let shortURL = toShortURL();
   urlDatabase[shortURL] = req.body.longURL;
   res.redirect(`/urls/${shortURL}`);
@@ -132,6 +137,9 @@ app.post("/logout", (req, res) => {
 });
 
 app.get("/urls/new", (req, res) => {
+  if (!req.cookies.user_id) {
+    return res.redirect("/urls");
+  }
   const templateVars = {
     user: users[req.cookies.user_id],
   };
