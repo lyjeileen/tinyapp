@@ -1,14 +1,20 @@
 const express = require("express");
 const app = express();
 const morgan = require("morgan");
-const cookieParser = require("cookie-parser");
+const cookieSession = require("cookie-session");
 const bcrypt = require("bcryptjs");
 const PORT = 8080;
 
 app.use(morgan("dev"));
 app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());
 app.set("view engine", "ejs");
+app.use(
+  cookieSession({
+    name: "session",
+    keys: ["secret"],
+    maxAge: 60 * 60 * 1000,
+  })
+);
 
 const toShortURL = function generateRandomString() {
   const alphanumericals =
@@ -71,30 +77,30 @@ app.get("/", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
-  if (!req.cookies.user_id) {
+  if (!req.session.user_id) {
     return res.status(401).send("You are not logged in.");
   }
 
   const templateVars = {
-    user: users[req.cookies.user_id],
-    urls: urlsForUser(req.cookies.user_id),
+    user: users[req.session.user_id],
+    urls: urlsForUser(req.session.user_id),
   };
   res.render("urls_index", templateVars);
 });
 
 app.get("/login", (req, res) => {
-  if (req.cookies.user_id) {
+  if (req.session.user_id) {
     return res.redirect("urls");
   }
-  const templateVars = { user: users[req.cookies.user_id] };
+  const templateVars = { user: users[req.session.user_id] };
   res.render("login", templateVars);
 });
 
 app.get("/register", (req, res) => {
-  if (req.cookies.user_id) {
+  if (req.session.user_id) {
     return res.redirect("urls");
   }
-  const templateVars = { user: users[req.cookies.user_id] };
+  const templateVars = { user: users[req.session.user_id] };
   res.render("register", templateVars);
 });
 
@@ -111,12 +117,12 @@ app.post("/register", (req, res) => {
   const hashedPassword = bcrypt.hashSync(password, 10);
   users[id] = { id, email, password: hashedPassword };
 
-  res.cookie("user_id", id);
+  req.session.user_id = id;
   res.redirect("/urls");
 });
 
 app.post("/urls", (req, res) => {
-  if (!req.cookies.user_id) {
+  if (!req.session.user_id) {
     return res.send(
       "Only registered users can shorten URLs. Please log in first."
     );
@@ -124,7 +130,7 @@ app.post("/urls", (req, res) => {
   let shortURL = toShortURL();
   urlDatabase[shortURL] = {
     longURL: req.body.longURL,
-    userID: req.cookies.user_id,
+    userID: req.session.user_id,
   };
   res.redirect(`/urls/${shortURL}`);
 });
@@ -138,7 +144,7 @@ app.post("/login", (req, res) => {
     return res.status(403).send("Incorrect password.");
   }
 
-  res.cookie("user_id", user.id);
+  req.session.user_id = user.id;
   res.redirect("/urls");
 });
 
@@ -147,10 +153,10 @@ app.post("/urls/:id", (req, res) => {
   if (!urlDatabase[id]) {
     return res.send("Id does not exist.");
   }
-  if (!req.cookies.user_id) {
+  if (!req.session.user_id) {
     return res.send("This page is only accessible to logged-in user.");
   }
-  const validURLs = urlsForUser(req.cookies.user_id);
+  const validURLs = urlsForUser(req.session.user_id);
   if (!validURLs[id]) {
     return res.send("Sorry, this URL does not belong to your account.");
   }
@@ -164,10 +170,10 @@ app.post("/urls/:id/delete", (req, res) => {
   if (!urlDatabase[id]) {
     return res.send("Id does not exist.");
   }
-  if (!req.cookies.user_id) {
+  if (!req.session.user_id) {
     return res.send("This page is only accessible to logged-in user.");
   }
-  const validURLs = urlsForUser(req.cookies.user_id);
+  const validURLs = urlsForUser(req.session.user_id);
   if (!validURLs[id]) {
     return res.send("Sorry, this URL does not belong to your account.");
   }
@@ -176,32 +182,32 @@ app.post("/urls/:id/delete", (req, res) => {
 });
 
 app.post("/logout", (req, res) => {
-  res.clearCookie("user_id");
+  req.session = null;
   res.redirect("/urls");
 });
 
 app.get("/urls/new", (req, res) => {
-  if (!req.cookies.user_id) {
+  if (!req.session.user_id) {
     return res.redirect("/urls");
   }
   const templateVars = {
-    user: users[req.cookies.user_id],
+    user: users[req.session.user_id],
   };
   res.render("urls_new", templateVars);
 });
 
 app.get("/urls/:id", (req, res) => {
-  if (!req.cookies.user_id) {
+  if (!req.session.user_id) {
     return res.send("This page is only accessible to logged-in user.");
   }
-  const validURLs = urlsForUser(req.cookies.user_id);
+  const validURLs = urlsForUser(req.session.user_id);
   if (!validURLs[req.params.id]) {
     return res.send("This URL does not belong to your account.");
   }
   const templateVars = {
     id: req.params.id,
     longURL: validURLs[req.params.id],
-    user: users[req.cookies.user_id],
+    user: users[req.session.user_id],
   };
   res.render("urls_show", templateVars);
 });
