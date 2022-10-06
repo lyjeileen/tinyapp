@@ -96,7 +96,15 @@ app.post("/urls", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
-  res.cookie("user_id", req.body);
+  const user = users[getUserByEmail(req.body.email)];
+  if (!getUserByEmail(req.body.email)) {
+    return res.status(403).send("Please enter a valid email address");
+  }
+  if (req.body.password !== user.password) {
+    return res.status(403).send("Incorrect password.");
+  }
+
+  res.cookie("user_id", user.id);
   res.redirect("/urls");
 });
 
