@@ -56,16 +56,21 @@ app.get("/urls", (req, res) => {
     user: users[req.cookies.user_id],
     urls: urlDatabase,
   };
-  console.log(req.cookies.email);
   res.render("urls_index", templateVars);
 });
 
 app.get("/login", (req, res) => {
+  if (req.cookies.user_id) {
+    return res.redirect("urls");
+  }
   const templateVars = { user: users[req.cookies.user_id] };
   res.render("login", templateVars);
 });
 
 app.get("/register", (req, res) => {
+  if (req.cookies.user_id) {
+    return res.redirect("urls");
+  }
   const templateVars = { user: users[req.cookies.user_id] };
   res.render("register", templateVars);
 });
