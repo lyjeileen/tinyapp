@@ -162,7 +162,7 @@ app.post("/logout", (req, res) => {
 
 app.get("/urls/new", (req, res) => {
   if (!req.session.user_id) {
-    return res.redirect("/urls");
+    return res.redirect("/login");
   }
   const templateVars = {
     user: users[req.session.user_id],
