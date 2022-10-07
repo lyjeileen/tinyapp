@@ -4,7 +4,7 @@ const morgan = require("morgan");
 const cookieSession = require("cookie-session");
 const bcrypt = require("bcryptjs");
 const PORT = 8080;
-const { getUserByEmail } = require("./helpers.js");
+const { getUserByEmail, toShortURL, urlsForUser } = require("./helpers.js");
 
 app.use(morgan("dev"));
 app.use(express.urlencoded({ extended: true }));
@@ -16,27 +16,6 @@ app.use(
     maxAge: 60 * 60 * 1000,
   })
 );
-
-const toShortURL = function generateRandomString() {
-  const alphanumericals =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  let result = "";
-  for (let i = 0; i < 6; i++) {
-    result +=
-      alphanumericals[Math.floor(Math.random() * alphanumericals.length)];
-  }
-  return result;
-};
-
-const urlsForUser = function (id) {
-  let validURLs = {};
-  for (url in urlDatabase) {
-    if (urlDatabase[url].userID === id) {
-      validURLs[url] = urlDatabase[url].longURL;
-    }
-  }
-  return validURLs;
-};
 
 const urlDatabase = {
   b6UTxQ: {
@@ -75,7 +54,7 @@ app.get("/urls", (req, res) => {
   }
   const templateVars = {
     user: users[req.session.user_id],
-    urls: urlsForUser(req.session.user_id),
+    urls: urlsForUser(req.session.user_id, urlDatabase),
   };
   res.render("urls_index", templateVars);
 });
@@ -148,7 +127,7 @@ app.post("/urls/:id", (req, res) => {
   if (!req.session.user_id) {
     return res.send("This page is only accessible to logged-in user.");
   }
-  const validURLs = urlsForUser(req.session.user_id);
+  const validURLs = urlsForUser(req.session.user_id, urlDatabase);
   if (!validURLs[id]) {
     return res.send("Sorry, this URL does not belong to your account.");
   }
@@ -165,7 +144,7 @@ app.post("/urls/:id/delete", (req, res) => {
   if (!req.session.user_id) {
     return res.send("This page is only accessible to logged-in user.");
   }
-  const validURLs = urlsForUser(req.session.user_id);
+  const validURLs = urlsForUser(req.session.user_id, urlDatabase);
   if (!validURLs[id]) {
     return res.send("Sorry, this URL does not belong to your account.");
   }
@@ -192,7 +171,7 @@ app.get("/urls/:id", (req, res) => {
   if (!req.session.user_id) {
     return res.send("This page is only accessible to logged-in user.");
   }
-  const validURLs = urlsForUser(req.session.user_id);
+  const validURLs = urlsForUser(req.session.user_id, urlDatabase);
   if (!validURLs[req.params.id]) {
     return res.send("This URL does not belong to your account.");
   }
