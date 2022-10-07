@@ -171,6 +171,9 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.get("/urls/:id", (req, res) => {
+  if (!urlDatabase[req.params.id]) {
+    return res.send("This URL does not exist.");
+  }
   if (!req.session.user_id) {
     return res.send("This page is only accessible to logged-in user.");
   }
