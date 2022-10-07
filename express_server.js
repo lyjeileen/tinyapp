@@ -4,7 +4,7 @@ const morgan = require("morgan");
 const cookieSession = require("cookie-session");
 const bcrypt = require("bcryptjs");
 const PORT = 8080;
-const getUserByEmail = require("./helpers");
+const { getUserByEmail } = require("./helpers.js");
 
 app.use(morgan("dev"));
 app.use(express.urlencoded({ extended: true }));
