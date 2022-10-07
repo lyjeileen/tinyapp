@@ -136,7 +136,7 @@ app.post("/urls/:id", (req, res) => {
   }
 
   urlDatabase[id].longURL = req.body.newURL;
-  res.redirect(`/urls/${id}`);
+  res.redirect("/urls");
 });
 
 app.post("/urls/:id/delete", (req, res) => {
