@@ -33,14 +33,11 @@ const users = {
     id: "x8ndHs",
     email: "user@example.com",
     password: "$2a$10$CozJx3mThm0f50PneDetLOcQKt2suTusEWBA0hGZIB3/607Oub/wy",
-    //password:123
   },
-
   aJ48lW: {
     id: "aJ48lW",
     email: "lyjeileen@gmail.com",
     password: "$2a$10$MOMgyC4R6NAJVqE6vF3Os.6q12dGuN6A4ANYlU/3qn.0OSwiUXuZe",
-    //password:1234
   },
 };
 
@@ -62,12 +59,40 @@ app.get("/urls", (req, res) => {
   res.render("urls_index", templateVars);
 });
 
+app.post("/urls", (req, res) => {
+  if (!req.session.user_id) {
+    return res.send(
+      "Only registered users can shorten URLs. Please log in first."
+    );
+  }
+  let shortURL = toShortURL();
+  urlDatabase[shortURL] = {
+    longURL: req.body.longURL,
+    userID: req.session.user_id,
+  };
+  res.redirect(`/urls/${shortURL}`);
+});
+
 app.get("/login", (req, res) => {
   if (req.session.user_id) {
     return res.redirect("urls");
   }
   const templateVars = { user: undefined };
   res.render("login", templateVars);
+});
+
+app.post("/login", (req, res) => {
+  if (!getUserByEmail(req.body.email, users)) {
+    return res.status(403).send("Please enter a valid email address");
+  }
+
+  const user = users[getUserByEmail(req.body.email, users)];
+  if (!bcrypt.compareSync(req.body.password, user.password)) {
+    return res.status(403).send("Incorrect password.");
+  }
+
+  req.session.user_id = user.id;
+  res.redirect("/urls");
 });
 
 app.get("/register", (req, res) => {
@@ -90,73 +115,7 @@ app.post("/register", (req, res) => {
   }
   const hashedPassword = bcrypt.hashSync(password, 10);
   users[id] = { id, email, password: hashedPassword };
-
   req.session.user_id = id;
-  res.redirect("/urls");
-});
-
-app.post("/urls", (req, res) => {
-  if (!req.session.user_id) {
-    return res.send(
-      "Only registered users can shorten URLs. Please log in first."
-    );
-  }
-  let shortURL = toShortURL();
-  urlDatabase[shortURL] = {
-    longURL: req.body.longURL,
-    userID: req.session.user_id,
-  };
-  res.redirect(`/urls/${shortURL}`);
-});
-
-app.post("/login", (req, res) => {
-  if (!getUserByEmail(req.body.email, users)) {
-    return res.status(403).send("Please enter a valid email address");
-  }
-  const user = users[getUserByEmail(req.body.email, users)];
-  if (!bcrypt.compareSync(req.body.password, user.password)) {
-    return res.status(403).send("Incorrect password.");
-  }
-
-  req.session.user_id = user.id;
-  res.redirect("/urls");
-});
-
-app.post("/urls/:id", (req, res) => {
-  const id = req.params.id;
-  if (!urlDatabase[id]) {
-    return res.send("Id does not exist.");
-  }
-  if (!req.session.user_id) {
-    return res.send("This page is only accessible to logged-in user.");
-  }
-  const validURLs = urlsForUser(req.session.user_id, urlDatabase);
-  if (!validURLs[id]) {
-    return res.send("Sorry, this URL does not belong to your account.");
-  }
-
-  urlDatabase[id].longURL = req.body.newURL;
-  res.redirect("/urls");
-});
-
-app.post("/urls/:id/delete", (req, res) => {
-  const id = req.params.id;
-  if (!urlDatabase[id]) {
-    return res.send("Id does not exist.");
-  }
-  if (!req.session.user_id) {
-    return res.send("This page is only accessible to logged-in user.");
-  }
-  const validURLs = urlsForUser(req.session.user_id, urlDatabase);
-  if (!validURLs[id]) {
-    return res.send("Sorry, this URL does not belong to your account.");
-  }
-  delete urlDatabase[id];
-  res.redirect("/urls");
-});
-
-app.post("/logout", (req, res) => {
-  req.session = null;
   res.redirect("/urls");
 });
 
@@ -189,6 +148,23 @@ app.get("/urls/:id", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
+app.post("/urls/:id", (req, res) => {
+  const id = req.params.id;
+  if (!urlDatabase[id]) {
+    return res.send("Id does not exist.");
+  }
+  if (!req.session.user_id) {
+    return res.send("This page is only accessible to logged-in user.");
+  }
+  const validURLs = urlsForUser(req.session.user_id, urlDatabase);
+  if (!validURLs[id]) {
+    return res.send("Sorry, this URL does not belong to your account.");
+  }
+
+  urlDatabase[id].longURL = req.body.newURL;
+  res.redirect("/urls");
+});
+
 app.get("/u/:id", (req, res) => {
   if (!urlDatabase[req.params.id]) {
     return res.status(404).send("Id does not exist");
@@ -197,12 +173,35 @@ app.get("/u/:id", (req, res) => {
   res.redirect(longURL);
 });
 
+app.post("/urls/:id/delete", (req, res) => {
+  const id = req.params.id;
+  if (!urlDatabase[id]) {
+    return res.send("Id does not exist.");
+  }
+
+  if (!req.session.user_id) {
+    return res.send("This page is only accessible to logged-in user.");
+  }
+
+  const validURLs = urlsForUser(req.session.user_id, urlDatabase);
+  if (!validURLs[id]) {
+    return res.send("Sorry, this URL does not belong to your account.");
+  }
+  delete urlDatabase[id];
+  res.redirect("/urls");
+});
+
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
 
 app.get("/hello", (req, res) => {
   res.send("<html><body>Hello <b>World</b></body></html>\n");
+});
+
+app.post("/logout", (req, res) => {
+  req.session = null;
+  res.redirect("/urls");
 });
 
 app.listen(PORT, () => {
