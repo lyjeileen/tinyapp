@@ -61,9 +61,9 @@ app.get("/urls", (req, res) => {
 
 app.post("/urls", (req, res) => {
   if (!req.session.user_id) {
-    return res.send(
-      "Only registered users can shorten URLs. Please log in first."
-    );
+    return res
+      .status(401)
+      .send("Only registered users can shorten URLs. Please log in first.");
   }
   let shortURL = toShortURL();
   urlDatabase[shortURL] = {
@@ -131,14 +131,16 @@ app.get("/urls/new", (req, res) => {
 
 app.get("/urls/:id", (req, res) => {
   if (!urlDatabase[req.params.id]) {
-    return res.send("This URL does not exist.");
+    return res.status(404).send("This URL does not exist.");
   }
   if (!req.session.user_id) {
-    return res.send("This page is only accessible to logged-in user.");
+    return res
+      .status(401)
+      .send("This page is only accessible to logged-in user.");
   }
   const validURLs = urlsForUser(req.session.user_id, urlDatabase);
   if (!validURLs[req.params.id]) {
-    return res.send("This URL does not belong to your account.");
+    return res.status(403).send("This URL does not belong to your account.");
   }
   const templateVars = {
     id: req.params.id,
@@ -151,14 +153,18 @@ app.get("/urls/:id", (req, res) => {
 app.post("/urls/:id", (req, res) => {
   const id = req.params.id;
   if (!urlDatabase[id]) {
-    return res.send("Id does not exist.");
+    return res.status(404).send("Id does not exist.");
   }
   if (!req.session.user_id) {
-    return res.send("This page is only accessible to logged-in user.");
+    return res
+      .status(401)
+      .send("This page is only accessible to logged-in user.");
   }
   const validURLs = urlsForUser(req.session.user_id, urlDatabase);
   if (!validURLs[id]) {
-    return res.send("Sorry, this URL does not belong to your account.");
+    return res
+      .status(403)
+      .send("Sorry, this URL does not belong to your account.");
   }
 
   urlDatabase[id].longURL = req.body.newURL;
@@ -176,16 +182,20 @@ app.get("/u/:id", (req, res) => {
 app.post("/urls/:id/delete", (req, res) => {
   const id = req.params.id;
   if (!urlDatabase[id]) {
-    return res.send("Id does not exist.");
+    return res.status(404).send("Id does not exist.");
   }
 
   if (!req.session.user_id) {
-    return res.send("This page is only accessible to logged-in user.");
+    return res
+      .status(401)
+      .send("This page is only accessible to logged-in user.");
   }
-
+  console.log(req.session.user_id);
   const validURLs = urlsForUser(req.session.user_id, urlDatabase);
   if (!validURLs[id]) {
-    return res.send("Sorry, this URL does not belong to your account.");
+    return res
+      .status(403)
+      .send("Sorry, this URL does not belong to your account.");
   }
   delete urlDatabase[id];
   res.redirect("/urls");
